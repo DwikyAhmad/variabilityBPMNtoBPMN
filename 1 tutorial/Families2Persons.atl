@@ -1,0 +1,8 @@
+module Families2Persons;
+
+-- @path Families=/variabilityBPMNtoBPMN/Families.ecore
+-- @path Persons=/variabilityBPMNtoBPMN/Persons.ecore
+
+create OUT: Persons from IN: Families;
+
+

@@ -1,0 +1,124 @@
+-- @path VBPMN=/variabilityBPMNtoBPMN/BPMN20.ecore
+-- @path BPMN=/variabilityBPMNtoBPMN/BPMN20.ecore
+
+module DeriveVarBPMN;
+
+create OUT : BPMN from IN : VBPMN;
+
+helper context VBPMN!BaseElement def: isExcluded : Boolean =
+	if self.documentation->isEmpty() then
+		false
+	else
+		self.documentation->exists(d | 
+			d.text.toString().indexOf('"action": "exclude"') >= 0
+		)
+	endif;
+
+helper context VBPMN!FlowNode def: getNextValidTarget : VBPMN!FlowNode =
+	if not self.isExcluded then
+		self
+	else
+		-- get element after exclusion element
+		if self.outgoing->isEmpty() or self.outgoing->first().targetRef.oclIsUndefined() then
+			OclUndefined -- Safety check for dead ends
+		else
+			self.outgoing->first().targetRef.getNextValidTarget
+		endif
+	endif;
+
+-- Transform Definitions (root container)
+rule Definitions {
+	from s : VBPMN!Definitions
+	to t : BPMN!Definitions (
+		id <- s.id,
+		name <- s.name,
+		targetNamespace <- s.targetNamespace,
+		exporter <- s.exporter,
+		exporterVersion <- s.exporterVersion,
+		rootElements <- s.rootElements
+	)
+}
+
+-- Transform Process
+rule Process {
+	from s : VBPMN!Process
+	to t : BPMN!Process (
+		id <- s.id,
+		name <- s.name,
+		isExecutable <- s.isExecutable,
+		flowElements <- s.flowElements
+	)
+}
+
+rule ReconnectSequenceFlow {
+	from
+		s : VBPMN!SequenceFlow (
+			not s.sourceRef.isExcluded
+		)
+	to
+		t : BPMN!SequenceFlow (
+			id <- s.id,
+			name <- s.name,
+			
+			sourceRef <- s.sourceRef,
+			
+			targetRef <- s.targetRef.getNextValidTarget
+		)	
+}
+
+
+-- Keep other element
+
+rule StartEvent {
+	from s : VBPMN!StartEvent (
+		not s.isExcluded
+	)
+	to t : BPMN!StartEvent (
+		id <- s.id, name <- s.name
+	)
+}
+
+rule EndEvent {
+	from s : VBPMN!EndEvent (
+		not s.isExcluded
+	)
+	to t : BPMN!EndEvent (
+		id <- s.id, name <- s.name
+	)
+}
+
+rule ExclusiveGateway {
+	from s : VBPMN!ExclusiveGateway (
+		not s.isExcluded
+	)
+	to t : BPMN!ExclusiveGateway (
+		id <- s.id, name <- s.name
+	)
+}
+
+rule ParallelGateway {
+	from s : VBPMN!ParallelGateway (
+		not s.isExcluded
+	)
+	to t : BPMN!ParallelGateway (
+		id <- s.id, name <- s.name
+	)
+}
+
+rule ReceiveTask {
+	from s: VBPMN!ReceiveTask (
+		not s.isExcluded
+	)
+	to t: BPMN!ReceiveTask (
+		id <- s.id, name <- s.name	
+	)
+}
+
+rule UserTask {
+	from s: VBPMN!UserTask (
+		not s.isExcluded
+	)
+	to t: BPMN!UserTask (
+		id <- s.id, name <- s.name
+	)
+}
