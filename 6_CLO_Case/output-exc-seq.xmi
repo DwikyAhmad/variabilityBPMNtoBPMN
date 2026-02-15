@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<bpmn2:Definitions xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" id="_bCoTcAo0EfGv3ZY7ytEv0A" exporter="org.eclipse.bpmn2.modeler.core" exporterVersion="1.5.4.RC1-v20220528-0836-B1">
+  <rootElements xsi:type="bpmn2:Process" id="Process_1" name="Process 1">
+    <flowElements xsi:type="bpmn2:StartEvent" id="StartEvent_1" name="Start" outgoing="SequenceFlow_1"/>
+    <flowElements xsi:type="bpmn2:InclusiveGateway" id="InclusiveGateway_1" name="Need Sub-CLO?" incoming="SequenceFlow_1" outgoing="SequenceFlow_3"/>
+    <flowElements xsi:type="bpmn2:SequenceFlow" id="SequenceFlow_1" sourceRef="StartEvent_1" targetRef="InclusiveGateway_1"/>
+    <flowElements xsi:type="bpmn2:SubProcess" id="SubProcess_1" name="Sub Process 1" incoming="SequenceFlow_3" outgoing="SequenceFlow_4">
+      <flowElements xsi:type="bpmn2:UserTask" id="UserTask_1" name="CRUD Sub-CLO" outgoing="SequenceFlow_2"/>
+      <flowElements xsi:type="bpmn2:UserTask" id="UserTask_2" name="Map Sub-CLO to CLO" incoming="SequenceFlow_2"/>
+      <flowElements xsi:type="bpmn2:SequenceFlow" id="SequenceFlow_2" sourceRef="UserTask_1" targetRef="UserTask_2"/>
+      <flowElements xsi:type="bpmn2:SequenceFlow" id="SequenceFlow_4" sourceRef="SubProcess_1" targetRef="UserTask_3"/>
+    </flowElements>
+    <flowElements xsi:type="bpmn2:SequenceFlow" id="SequenceFlow_3" name="YES" sourceRef="InclusiveGateway_1" targetRef="SubProcess_1"/>
+    <flowElements xsi:type="bpmn2:UserTask" id="UserTask_3" name="CRUD Grade Components" incoming="SequenceFlow_4" outgoing="SequenceFlow_5"/>
+    <flowElements xsi:type="bpmn2:UserTask" id="UserTask_4" name="Map Grade Components to CLO and Sub-CLO " incoming="SequenceFlow_5" outgoing="SequenceFlow_6"/>
+    <flowElements xsi:type="bpmn2:SequenceFlow" id="SequenceFlow_5" sourceRef="UserTask_3" targetRef="UserTask_4"/>
+    <flowElements xsi:type="bpmn2:ManualTask" id="ManualTask_1" name="Conduct Teaching and Student Assesment Activities" incoming="SequenceFlow_6" outgoing="SequenceFlow_8"/>
+    <flowElements xsi:type="bpmn2:SequenceFlow" id="SequenceFlow_6" sourceRef="UserTask_4" targetRef="ManualTask_1"/>
+    <flowElements xsi:type="bpmn2:ManualTask" id="ManualTask_2" name="Grade Student Assement Results" incoming="SequenceFlow_8" outgoing="SequenceFlow_9"/>
+    <flowElements xsi:type="bpmn2:SequenceFlow" id="SequenceFlow_8" sourceRef="ManualTask_1" targetRef="ManualTask_2"/>
+    <flowElements xsi:type="bpmn2:UserTask" id="UserTask_5" name="Entry Component Grades" incoming="SequenceFlow_9" outgoing="SequenceFlow_10"/>
+    <flowElements xsi:type="bpmn2:SequenceFlow" id="SequenceFlow_9" sourceRef="ManualTask_2" targetRef="UserTask_5"/>
+    <flowElements xsi:type="bpmn2:EndEvent" id="EndEvent_1" name="End" incoming="SequenceFlow_10"/>
+    <flowElements xsi:type="bpmn2:SequenceFlow" id="SequenceFlow_10" sourceRef="UserTask_5" targetRef="EndEvent_1"/>
+  </rootElements>
+</bpmn2:Definitions>

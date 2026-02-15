@@ -13,7 +13,7 @@
     <bpmn2:sequenceFlow id="SequenceFlow_1" sourceRef="StartEvent_1" targetRef="InclusiveGateway_1"/>
     <bpmn2:subProcess id="SubProcess_1" name="Sub Process 1">
       <bpmn2:documentation>
-        {"action": "exclude"}
+        {"action": "include"}
       </bpmn2:documentation>
       <bpmn2:incoming>SequenceFlow_3</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_4</bpmn2:outgoing>
@@ -44,7 +44,7 @@
     <bpmn2:sequenceFlow id="SequenceFlow_6" sourceRef="UserTask_4" targetRef="ManualTask_1"/>
     <bpmn2:sequenceFlow id="SequenceFlow_7" name="NO" sourceRef="InclusiveGateway_1" targetRef="UserTask_3">
       <bpmn2:documentation>
-        {"action": "include"}
+        {"action": "exclude"}
       </bpmn2:documentation>
     </bpmn2:sequenceFlow>
     <bpmn2:manualTask id="ManualTask_2" name="Grade Student Assement Results">

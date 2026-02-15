@@ -12,21 +12,18 @@
     </bpmn2:inclusiveGateway>
     <bpmn2:sequenceFlow id="SequenceFlow_1" sourceRef="StartEvent_1" targetRef="InclusiveGateway_1"/>
     <bpmn2:subProcess id="SubProcess_1" name="Sub Process 1">
-      <bpmn2:documentation>
-        {"action": "exclude"}
-      </bpmn2:documentation>
+      <bpmn2:incoming>SequenceFlow_3</bpmn2:incoming>
+      <bpmn2:outgoing>SequenceFlow_4</bpmn2:outgoing>
       <bpmn2:userTask id="UserTask_1" name="CRUD Sub-CLO">
-        <bpmn2:incoming>SequenceFlow_3</bpmn2:incoming>
         <bpmn2:outgoing>SequenceFlow_2</bpmn2:outgoing>
       </bpmn2:userTask>
       <bpmn2:userTask id="UserTask_2" name="Map Sub-CLO to CLO">
         <bpmn2:incoming>SequenceFlow_2</bpmn2:incoming>
-        <bpmn2:outgoing>SequenceFlow_4</bpmn2:outgoing>
       </bpmn2:userTask>
       <bpmn2:sequenceFlow id="SequenceFlow_2" sourceRef="UserTask_1" targetRef="UserTask_2"/>
-      <bpmn2:sequenceFlow id="SequenceFlow_4" sourceRef="UserTask_2" targetRef="UserTask_3"/>
+      <bpmn2:sequenceFlow id="SequenceFlow_4" sourceRef="SubProcess_1" targetRef="UserTask_3"/>
     </bpmn2:subProcess>
-    <bpmn2:sequenceFlow id="SequenceFlow_3" name="YES" sourceRef="InclusiveGateway_1" targetRef="UserTask_1"/>
+    <bpmn2:sequenceFlow id="SequenceFlow_3" name="YES" sourceRef="InclusiveGateway_1" targetRef="SubProcess_1"/>
     <bpmn2:userTask id="UserTask_3" name="CRUD Grade Components">
       <bpmn2:incoming>SequenceFlow_4</bpmn2:incoming>
       <bpmn2:incoming>SequenceFlow_7</bpmn2:incoming>
@@ -138,19 +135,19 @@
         <di:waypoint xsi:type="dc:Point" x="549.0" y="559.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_7"/>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_3" bpmnElement="SequenceFlow_3" sourceElement="BPMNShape_InclusiveGateway_1" targetElement="BPMNShape_UserTask_1">
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_3" bpmnElement="SequenceFlow_3" sourceElement="BPMNShape_InclusiveGateway_1" targetElement="BPMNShape_SubProcess_1">
         <di:waypoint xsi:type="dc:Point" x="560.0" y="290.0"/>
-        <di:waypoint xsi:type="dc:Point" x="560.0" y="360.0"/>
-        <di:waypoint xsi:type="dc:Point" x="549.0" y="360.0"/>
-        <di:waypoint xsi:type="dc:Point" x="549.0" y="470.0"/>
+        <di:waypoint xsi:type="dc:Point" x="560.0" y="355.0"/>
+        <di:waypoint xsi:type="dc:Point" x="545.0" y="355.0"/>
+        <di:waypoint xsi:type="dc:Point" x="545.0" y="420.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_8">
-          <dc:Bounds height="21.0" width="36.0" x="548.0" y="361.0"/>
+          <dc:Bounds height="21.0" width="36.0" x="536.0" y="356.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_4" bpmnElement="SequenceFlow_4" sourceElement="BPMNShape_UserTask_2" targetElement="BPMNShape_UserTask_3">
-        <di:waypoint xsi:type="dc:Point" x="549.0" y="630.0"/>
-        <di:waypoint xsi:type="dc:Point" x="549.0" y="665.0"/>
-        <di:waypoint xsi:type="dc:Point" x="565.0" y="665.0"/>
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_4" bpmnElement="SequenceFlow_4" sourceElement="BPMNShape_SubProcess_1" targetElement="BPMNShape_UserTask_3">
+        <di:waypoint xsi:type="dc:Point" x="545.0" y="651.0"/>
+        <di:waypoint xsi:type="dc:Point" x="545.0" y="675.0"/>
+        <di:waypoint xsi:type="dc:Point" x="565.0" y="675.0"/>
         <di:waypoint xsi:type="dc:Point" x="565.0" y="700.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_10"/>
       </bpmndi:BPMNEdge>

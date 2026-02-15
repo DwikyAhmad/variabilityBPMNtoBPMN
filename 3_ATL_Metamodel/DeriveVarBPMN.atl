@@ -73,6 +73,7 @@ rule Process {
 rule ReconnectSequenceFlow {
 	from
 		s : VBPMN!SequenceFlow (
+			not s.isExcluded and
 			not s.sourceRef.isExcluded and
 			not s.isInExcludedContainer
 		)
