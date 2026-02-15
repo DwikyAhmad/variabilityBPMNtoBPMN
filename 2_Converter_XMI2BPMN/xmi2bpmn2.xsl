@@ -81,6 +81,14 @@
         </bpmn2:scriptTask>
     </xsl:template>
 
+    <xsl:template match="flowElements[@xsi:type='bpmn2:SubProcess']">
+        <bpmn2:subProcess>
+            <xsl:copy-of select="@id | @name | @triggeredByEvent"/>
+            <xsl:call-template name="create-outgoing-incoming"/>
+            <xsl:apply-templates select="flowElements | *[local-name()='flowElements']"/>
+        </bpmn2:subProcess>
+    </xsl:template>
+
     <xsl:template match="flowElements[@xsi:type='bpmn2:ExclusiveGateway']">
         <bpmn2:exclusiveGateway>
             <xsl:copy-of select="@id | @name"/>

@@ -12,6 +12,9 @@
     </bpmn2:inclusiveGateway>
     <bpmn2:sequenceFlow id="SequenceFlow_1" sourceRef="StartEvent_1" targetRef="InclusiveGateway_1"/>
     <bpmn2:subProcess id="SubProcess_1" name="Sub Process 1">
+      <bpmn2:documentation>
+        {"action": "exclude"}
+      </bpmn2:documentation>
       <bpmn2:userTask id="UserTask_1" name="CRUD Sub-CLO">
         <bpmn2:incoming>SequenceFlow_3</bpmn2:incoming>
         <bpmn2:outgoing>SequenceFlow_2</bpmn2:outgoing>

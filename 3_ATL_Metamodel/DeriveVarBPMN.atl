@@ -1,5 +1,5 @@
--- @path VBPMN=/variabilityBPMNtoBPMN/BPMN20.ecore
--- @path BPMN=/variabilityBPMNtoBPMN/BPMN20.ecore
+-- @path VBPMN=/variabilityBPMNtoBPMN/3_ATL_Metamodel/BPMN20.ecore
+-- @path BPMN=/variabilityBPMNtoBPMN/3_ATL_Metamodel/BPMN20.ecore
 
 module DeriveVarBPMN;
 
@@ -14,8 +14,28 @@ helper context VBPMN!BaseElement def: isExcluded : Boolean =
 		docText.indexOf('exclude') >= 0
 	);
 
+helper context VBPMN!BaseElement def: isSkipped : Boolean =
+	self.documentation->notEmpty() and
+	self.documentation->exists(d | 
+		let docText : String = d.mixed->iterate(e; acc : String = '' |
+			acc + e.toString()
+		) in
+		docText.indexOf('skip') >= 0
+	);
+
+helper context VBPMN!FlowElement def: isInExcludedContainer : Boolean =
+	if self.refImmediateComposite().oclIsUndefined() then
+		false
+	else
+		if self.refImmediateComposite().oclIsKindOf(VBPMN!SubProcess) then
+			self.refImmediateComposite().isExcluded
+		else
+			false
+		endif
+	endif;
+
 helper context VBPMN!FlowNode def: getNextValidTarget : VBPMN!FlowNode =
-	if not self.isExcluded then
+	if not self.isSkipped then
 		self
 	else
 		-- get element after exclusion element
@@ -53,7 +73,8 @@ rule Process {
 rule ReconnectSequenceFlow {
 	from
 		s : VBPMN!SequenceFlow (
-			not s.sourceRef.isExcluded
+			not s.sourceRef.isExcluded and
+			not s.isInExcludedContainer
 		)
 	to
 		t : BPMN!SequenceFlow (
@@ -71,7 +92,8 @@ rule ReconnectSequenceFlow {
 
 rule StartEvent {
 	from s : VBPMN!StartEvent (
-		not s.isExcluded
+		not s.isExcluded and
+		not s.isInExcludedContainer
 	)
 	to t : BPMN!StartEvent (
 		id <- s.id, name <- s.name
@@ -80,7 +102,8 @@ rule StartEvent {
 
 rule EndEvent {
 	from s : VBPMN!EndEvent (
-		not s.isExcluded
+		not s.isExcluded and
+		not s.isInExcludedContainer
 	)
 	to t : BPMN!EndEvent (
 		id <- s.id, name <- s.name
@@ -89,7 +112,8 @@ rule EndEvent {
 
 rule ExclusiveGateway {
 	from s : VBPMN!ExclusiveGateway (
-		not s.isExcluded
+		not s.isExcluded and
+		not s.isInExcludedContainer
 	)
 	to t : BPMN!ExclusiveGateway (
 		id <- s.id, name <- s.name
@@ -98,16 +122,28 @@ rule ExclusiveGateway {
 
 rule ParallelGateway {
 	from s : VBPMN!ParallelGateway (
-		not s.isExcluded
+		not s.isExcluded and
+		not s.isInExcludedContainer
 	)
 	to t : BPMN!ParallelGateway (
 		id <- s.id, name <- s.name
 	)
 }
 
+rule InclusiveGateway {
+	from s : VBPMN!InclusiveGateway (
+		not s.isExcluded and
+		not s.isInExcludedContainer
+	)
+	to t : BPMN!InclusiveGateway (
+		id <- s.id, name <- s.name
+	)
+}
+
 rule ReceiveTask {
 	from s: VBPMN!ReceiveTask (
-		not s.isExcluded
+		not s.isExcluded and
+		not s.isInExcludedContainer
 	)
 	to t: BPMN!ReceiveTask (
 		id <- s.id, name <- s.name	
@@ -116,9 +152,32 @@ rule ReceiveTask {
 
 rule UserTask {
 	from s: VBPMN!UserTask (
-		not s.isExcluded
+		not s.isExcluded and
+		not s.isInExcludedContainer
 	)
 	to t: BPMN!UserTask (
 		id <- s.id, name <- s.name
+	)
+}
+
+rule ManualTask {
+	from s: VBPMN!ManualTask (
+		not s.isExcluded and
+		not s.isInExcludedContainer
+	)
+	to t: BPMN!ManualTask (
+		id <- s.id, name <- s.name
+	)
+}
+
+rule SubProcess {
+	from s: VBPMN!SubProcess (
+		not s.isExcluded
+	)
+	to t: BPMN!SubProcess (
+		id <- s.id,
+		name <- s.name,
+		triggeredByEvent <- s.triggeredByEvent,
+		flowElements <- s.flowElements
 	)
 }
