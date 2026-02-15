@@ -2,10 +2,9 @@
 <bpmn2:Definitions xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" id="_rkKzkATYEfGttPssRKi66g" exporter="org.eclipse.bpmn2.modeler.core" exporterVersion="1.5.4.RC1-v20220528-0836-B1" targetNamespace="bpmnrse">
   <rootElements xsi:type="bpmn2:Process" id="Process_1" name="Process 1">
     <flowElements xsi:type="bpmn2:StartEvent" id="StartEvent_1" name="Start" outgoing="SequenceFlow_12"/>
-    <flowElements xsi:type="bpmn2:ReceiveTask" id="ReceiveTask_2" name="Payment Invoice" incoming="SequenceFlow_13" outgoing="SequenceFlow_14"/>
+    <flowElements xsi:type="bpmn2:ReceiveTask" id="ReceiveTask_2" name="Payment Invoice" incoming="SequenceFlow_5" outgoing="SequenceFlow_14"/>
     <flowElements xsi:type="bpmn2:ReceiveTask" id="ReceiveTask_3" name="Study Plan Period" incoming="SequenceFlow_12" outgoing="SequenceFlow_5"/>
-    <flowElements xsi:type="bpmn2:UserTask" id="UserTask_1" name="Create Study Plan" incoming="SequenceFlow_5" outgoing="SequenceFlow_13"/>
-    <flowElements xsi:type="bpmn2:SequenceFlow" id="SequenceFlow_5" sourceRef="ReceiveTask_3" targetRef="UserTask_1"/>
+    <flowElements xsi:type="bpmn2:SequenceFlow" id="SequenceFlow_5" sourceRef="ReceiveTask_3" targetRef="ReceiveTask_2"/>
     <flowElements xsi:type="bpmn2:UserTask" id="UserTask_2" name="Make Payment" incoming="SequenceFlow_14" outgoing="SequenceFlow_15"/>
     <flowElements xsi:type="bpmn2:ReceiveTask" id="ReceiveTask_1" name="Academic Advisor Approval" incoming="SequenceFlow_15" outgoing="SequenceFlow_9"/>
     <flowElements xsi:type="bpmn2:UserTask" id="UserTask_3" name="View Study Plan Status" incoming="SequenceFlow_9" outgoing="SequenceFlow_10"/>
@@ -15,7 +14,6 @@
     <flowElements xsi:type="bpmn2:EndEvent" id="EndEvent_1" name="End" incoming="SequenceFlow_11"/>
     <flowElements xsi:type="bpmn2:SequenceFlow" id="SequenceFlow_11" sourceRef="UserTask_4" targetRef="EndEvent_1"/>
     <flowElements xsi:type="bpmn2:SequenceFlow" id="SequenceFlow_12" sourceRef="StartEvent_1" targetRef="ReceiveTask_3"/>
-    <flowElements xsi:type="bpmn2:SequenceFlow" id="SequenceFlow_13" sourceRef="UserTask_1" targetRef="ReceiveTask_2"/>
     <flowElements xsi:type="bpmn2:SequenceFlow" id="SequenceFlow_14" sourceRef="ReceiveTask_2" targetRef="UserTask_2"/>
     <flowElements xsi:type="bpmn2:SequenceFlow" id="SequenceFlow_15" sourceRef="UserTask_2" targetRef="ReceiveTask_1"/>
   </rootElements>

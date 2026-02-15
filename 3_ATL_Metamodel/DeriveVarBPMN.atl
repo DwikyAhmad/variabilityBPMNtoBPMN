@@ -6,13 +6,13 @@ module DeriveVarBPMN;
 create OUT : BPMN from IN : VBPMN;
 
 helper context VBPMN!BaseElement def: isExcluded : Boolean =
-	if self.documentation->isEmpty() then
-		false
-	else
-		self.documentation->exists(d | 
-			d.text.toString().indexOf('"action": "exclude"') >= 0
-		)
-	endif;
+	self.documentation->notEmpty() and
+	self.documentation->exists(d | 
+		let docText : String = d.mixed->iterate(e; acc : String = '' |
+			acc + e.toString()
+		) in
+		docText.indexOf('exclude') >= 0
+	);
 
 helper context VBPMN!FlowNode def: getNextValidTarget : VBPMN!FlowNode =
 	if not self.isExcluded then
