@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema 
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:sple="http://sple/bpmn/test_extensions"
+    xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL"
+    targetNamespace="http://sple/bpmn/test_extensions"
+    elementFormDefault="qualified">
+    
+    <!-- ========================================== -->
+    <!-- SPLE Variability Extension Group           -->
+    <!-- ========================================== -->
+    <!-- This group defines the variability elements that can be used in BPMN -->
+    <xsd:group name="variabilityElements">
+        <xsd:sequence>
+            <xsd:element ref="sple:variabilityType" minOccurs="0" maxOccurs="1"/>
+            <xsd:element ref="sple:include" minOccurs="0" maxOccurs="1"/>
+            <xsd:element ref="sple:exclude" minOccurs="0" maxOccurs="1"/>
+            <xsd:element ref="sple:variant" minOccurs="0" maxOccurs="unbounded"/>
+            <xsd:element ref="sple:bindingTime" minOccurs="0" maxOccurs="1"/>
+            <xsd:element ref="sple:condition" minOccurs="0" maxOccurs="1"/>
+        </xsd:sequence>
+    </xsd:group>
+    
+    <!-- ========================================== -->
+    <!-- Element Definitions                         -->
+    <!-- ========================================== -->
+    
+    <!-- Variability Type: optional, alternative, or, mandatory -->
+    <xsd:element name="variabilityType" type="sple:tVariabilityKind"/>
+    
+    <xsd:simpleType name="tVariabilityKind">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="optional"/>
+            <xsd:enumeration value="alternative"/>
+            <xsd:enumeration value="or"/>
+            <xsd:enumeration value="mandatory"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+    
+    <!-- Include/Exclude flags -->
+    <xsd:element name="include" type="xsd:boolean" default="true"/>
+    <xsd:element name="exclude" type="xsd:boolean" default="false"/>
+    
+    <!-- Variant element with complex type -->
+    <xsd:element name="variant" type="sple:tVariant"/>
+    
+    <xsd:complexType name="tVariant">
+        <xsd:sequence>
+            <xsd:element name="name" type="xsd:string" minOccurs="0"/>
+            <xsd:element name="condition" type="xsd:string" minOccurs="0"/>
+            <xsd:element name="enabled" type="xsd:boolean" minOccurs="0" default="false"/>
+            <xsd:element name="priority" type="xsd:int" minOccurs="0"/>
+        </xsd:sequence>
+        <xsd:attribute name="id" type="xsd:string" use="required"/>
+        <xsd:attribute name="selected" type="xsd:boolean" default="false"/>
+    </xsd:complexType>
+    
+    <!-- Binding Time element -->
+    <xsd:element name="bindingTime" type="sple:tBindingTime"/>
+    
+    <xsd:complexType name="tBindingTime">
+        <xsd:simpleContent>
+            <xsd:extension base="xsd:string">
+                <xsd:attribute name="phase" type="sple:tPhase"/>
+            </xsd:extension>
+        </xsd:simpleContent>
+    </xsd:complexType>
+    
+    <xsd:simpleType name="tPhase">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="design-time"/>
+            <xsd:enumeration value="deployment-time"/>
+            <xsd:enumeration value="runtime"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+    
+    <!-- Condition element -->
+    <xsd:element name="condition" type="sple:tCondition"/>
+    
+    <xsd:complexType name="tCondition">
+        <xsd:simpleContent>
+            <xsd:extension base="xsd:string">
+                <xsd:attribute name="language" type="xsd:string" default="expression"/>
+            </xsd:extension>
+        </xsd:simpleContent>
+    </xsd:complexType>
+    
+</xsd:schema>

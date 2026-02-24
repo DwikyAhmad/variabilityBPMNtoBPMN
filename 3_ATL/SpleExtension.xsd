@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema 
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:sple="http://sple/bpmn/extensions"
+    xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL"
+    targetNamespace="http://sple/bpmn/extensions"
+    elementFormDefault="qualified">
+    
+    <!-- ========================================== -->
+    <!-- SPLE Variability Extension Group           -->
+    <!-- ========================================== -->
+    <!-- This group defines the variability elements that can be used in BPMN -->
+    <xsd:group name="variabilityElements">
+        <xsd:sequence>
+            <xsd:element ref="sple:include" minOccurs="0" maxOccurs="1"/>
+            <xsd:element ref="sple:exclude" minOccurs="0" maxOccurs="1"/>
+            <xsd:element ref="sple:skip" minOccurs="0" maxOccurs="1"/>
+        </xsd:sequence>
+    </xsd:group>
+    
+    <!-- ========================================== -->
+    <!-- Element Definitions                         -->
+    <!-- ========================================== -->
+    
+    <xsd:element name="include" type="xsd:boolean" default="false"/>
+    <xsd:element name="exclude" type="xsd:boolean" default="false"/>
+    <xsd:element name="skip" type="xsd:boolean" default="false"/>
+    
+</xsd:schema>
