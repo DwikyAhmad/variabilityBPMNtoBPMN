@@ -1,0 +1,285 @@
+-- @path VBPMN=/variabilityBPMNtoBPMN/3_ATL_Metamodel/BPMN20.ecore
+-- @path BPMN=/variabilityBPMNtoBPMN/3_ATL_Metamodel/BPMN20.ecore
+
+module DeriveVarBPMN;
+
+create OUT : BPMN from IN : VBPMN;
+
+helper context VBPMN!BaseElement def: isExcluded : Boolean =
+	self.extensionValues->notEmpty() and
+	self.extensionValues->exists(ev | 
+		let extText : String = ev.value->iterate(e; acc : String = '' |
+			acc + e.toString()
+		) in
+		extText.indexOf('exclude') >= 0 and extText.indexOf('true') >= 0
+	);
+
+helper context VBPMN!BaseElement def: isSkipped : Boolean =
+	self.extensionValues->notEmpty() and
+	self.extensionValues->exists(ev | 
+		let extText : String = ev.value->iterate(e; acc : String = '' |
+			acc + e.toString()
+		) in
+		extText.indexOf('skip') >= 0 and extText.indexOf('true') >= 0
+	);
+
+helper context VBPMN!FlowElement def: isInExcludedContainer : Boolean =
+	if self.refImmediateComposite().oclIsUndefined() then
+		false
+	else
+		if self.refImmediateComposite().oclIsKindOf(VBPMN!SubProcess) then
+			self.refImmediateComposite().isExcluded
+		else
+			false
+		endif
+	endif;
+
+helper context VBPMN!FlowNode def: getNextValidTarget : VBPMN!FlowNode =
+	if not self.isSkipped then
+		self
+	else
+		-- get element after exclusion element
+		if self.outgoing->isEmpty() or self.outgoing->first().targetRef.oclIsUndefined() then
+			OclUndefined -- Safety check for dead ends
+		else
+			self.outgoing->first().targetRef.getNextValidTarget
+		endif
+	endif;
+
+-- Helper to check if element has receiver extension
+helper context VBPMN!FlowNode def: hasReceiver : Boolean =
+	if self.extensionValues->isEmpty() then
+		false
+	else
+		self.extensionValues->exists(ev | 
+			let extText : String = ev.value->iterate(e; acc : String = '' |
+				acc + e.toString()
+			) in
+			extText.indexOf('receiver') >= 0
+		)
+	endif;
+
+-- Helper to check if element has connector extension
+helper context VBPMN!FlowNode def: hasConnector : Boolean =
+	if self.extensionValues->isEmpty() then
+		false
+	else
+		self.extensionValues->exists(ev | 
+			let extText : String = ev.value->iterate(e; acc : String = '' |
+				acc + e.toString()
+			) in
+			extText.indexOf('connector') >= 0
+		)
+	endif;
+
+-- Helper to get connector target ID from a FlowNode
+helper context VBPMN!FlowNode def: getConnectorTargetId : String =
+	if self.extensionValues->isEmpty() then
+		''
+	else
+		let connectorEv : VBPMN!ExtensionAttributeValue = self.extensionValues->select(ev |
+			let extText : String = ev.value->iterate(e; acc : String = '' |
+				acc + e.toString()
+			) in
+			extText.indexOf('connector') >= 0
+		)->first() in
+		if connectorEv.oclIsUndefined() then
+			''
+		else
+			-- Extract just the task ID from the connector text
+			let fullText : String = connectorEv.value->iterate(e; acc : String = '' |
+				acc + e.toString()
+			) in
+			let startIdx : Integer = fullText.indexOf('>') in
+			let endIdx : Integer = fullText.lastIndexOf('<') in
+			if startIdx >= 0 and endIdx > startIdx then
+				fullText.substring(startIdx + 2, endIdx)
+			else
+				-- Fallback: just find anything that looks like a task ID
+				fullText
+			endif
+		endif
+	endif;
+
+-- Helper to find the target FlowNode by connector reference
+helper context VBPMN!FlowNode def: getConnectorTargetNode : VBPMN!FlowNode =
+	if not self.hasConnector then
+		OclUndefined
+	else
+		let targetId : String = self.getConnectorTargetId in
+		if targetId = '' then
+			OclUndefined
+		else
+			-- Find the FlowNode with matching ID that has receiver
+			let candidates : Sequence(VBPMN!FlowNode) = VBPMN!FlowNode.allInstances()
+				->select(fn | fn.hasReceiver) in
+			candidates->select(fn | 
+				targetId.indexOf(fn.id) >= 0 or fn.id.indexOf(targetId) >= 0 or fn.id = targetId
+			)->first()
+		endif
+	endif;
+
+-- Transform Definitions (root container)
+rule Definitions {
+	from s : VBPMN!Definitions
+	to t : BPMN!Definitions (
+		id <- s.id,
+		name <- s.name,
+		targetNamespace <- s.targetNamespace,
+		exporter <- s.exporter,
+		exporterVersion <- s.exporterVersion,
+		rootElements <- s.rootElements
+	)
+}
+
+-- Transform Process
+rule Process {
+	from s : VBPMN!Process
+	to t : BPMN!Process (
+		id <- s.id,
+		name <- s.name,
+		isExecutable <- s.isExecutable,
+		flowElements <- s.flowElements
+	)
+}
+
+rule ReconnectSequenceFlow {
+	from
+		s : VBPMN!SequenceFlow (
+			not s.isExcluded and
+			not s.sourceRef.isExcluded and
+			not s.isInExcludedContainer and
+			not s.targetRef.isExcluded
+		)
+	to
+		t : BPMN!SequenceFlow (
+			id <- s.id,
+			name <- s.name,
+			
+			sourceRef <- s.sourceRef,
+			
+			-- If source has connector to a receiver task, redirect to that task
+			-- Otherwise use the normal target (with skip handling)
+			targetRef <- 
+				if not s.sourceRef.getConnectorTargetNode.oclIsUndefined() then
+					s.sourceRef.getConnectorTargetNode
+				else
+					s.targetRef.getNextValidTarget
+				endif
+		)	
+}
+
+
+-- Keep other element
+
+rule StartEvent {
+	from s : VBPMN!StartEvent (
+		not s.isExcluded and
+		not s.isInExcludedContainer and
+		not s.isSkipped
+	)
+	to t : BPMN!StartEvent (
+		id <- s.id, name <- s.name
+	)
+}
+
+rule EndEvent {
+	from s : VBPMN!EndEvent (
+		not s.isExcluded and
+		not s.isInExcludedContainer and
+		not s.isSkipped
+	)
+	to t : BPMN!EndEvent (
+		id <- s.id, name <- s.name
+	)
+}
+
+rule ExclusiveGateway {
+	from s : VBPMN!ExclusiveGateway (
+		not s.isExcluded and
+		not s.isInExcludedContainer and
+		not s.isSkipped
+	)
+	to t : BPMN!ExclusiveGateway (
+		id <- s.id, name <- s.name
+	)
+}
+
+rule ParallelGateway {
+	from s : VBPMN!ParallelGateway (
+		not s.isExcluded and
+		not s.isInExcludedContainer and
+		not s.isSkipped
+	)
+	to t : BPMN!ParallelGateway (
+		id <- s.id, name <- s.name
+	)
+}
+
+rule InclusiveGateway {
+	from s : VBPMN!InclusiveGateway (
+		not s.isExcluded and
+		not s.isInExcludedContainer and
+		not s.isSkipped
+	)
+	to t : BPMN!InclusiveGateway (
+		id <- s.id, name <- s.name
+	)
+}
+
+rule Task {
+	from s: VBPMN!Task (
+		not s.isExcluded and
+		not s.isInExcludedContainer and
+		not s.isSkipped
+	)
+	to t: BPMN!Task (
+		id <- s.id, name <- s.name
+	)
+}
+
+rule ReceiveTask {
+	from s: VBPMN!ReceiveTask (
+		not s.isExcluded and
+		not s.isInExcludedContainer and
+		not s.isSkipped
+	)
+	to t: BPMN!ReceiveTask (
+		id <- s.id, name <- s.name	
+	)
+}
+
+rule UserTask {
+	from s: VBPMN!UserTask (
+		not s.isExcluded and
+		not s.isInExcludedContainer and
+		not s.isSkipped
+	)
+	to t: BPMN!UserTask (
+		id <- s.id, name <- s.name
+	)
+}
+
+rule ManualTask {
+	from s: VBPMN!ManualTask (
+		not s.isExcluded and
+		not s.isInExcludedContainer and
+		not s.isSkipped
+	)
+	to t: BPMN!ManualTask (
+		id <- s.id, name <- s.name
+	)
+}
+
+rule SubProcess {
+	from s: VBPMN!SubProcess (
+		not s.isExcluded and
+		not s.isSkipped
+	)
+	to t: BPMN!SubProcess (
+		id <- s.id,
+		name <- s.name,
+		triggeredByEvent <- s.triggeredByEvent,
+		flowElements <- s.flowElements
+	)
+}
