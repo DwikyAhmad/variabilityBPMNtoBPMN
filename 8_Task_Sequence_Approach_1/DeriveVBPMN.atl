@@ -5,23 +5,24 @@ module DeriveVarBPMN;
 
 create OUT : BPMN from IN : VBPMN;
 
-helper context VBPMN!BaseElement def: isExcluded : Boolean =
+-- Checks key/value within the same extension entry to avoid cross-tag mixing
+helper context VBPMN!BaseElement def: hasExtensionKeyValue(key : String, value : String) : Boolean =
 	self.extensionValues->notEmpty() and
-	self.extensionValues->exists(ev | 
-		let extText : String = ev.value->iterate(e; acc : String = '' |
-			acc + e.toString()
-		) in
-		extText.indexOf('exclude') >= 0 and extText.indexOf('true') >= 0
+	self.extensionValues->exists(ev |
+		ev.value->exists(e |
+			let entryText : String = e.toString() in
+			(entryText.indexOf(':' + key + '=') >= 0 or entryText.indexOf(key + '=') >= 0) and
+			(entryText.indexOf('text=' + value + ']') >= 0 or
+			 entryText.indexOf('text=' + value + ',') >= 0 or
+			 entryText.indexOf('text=' + value + ')') >= 0)
+		)
 	);
 
+helper context VBPMN!BaseElement def: isExcluded : Boolean =
+	self.hasExtensionKeyValue('inclusion', '2');
+
 helper context VBPMN!BaseElement def: isSkipped : Boolean =
-	self.extensionValues->notEmpty() and
-	self.extensionValues->exists(ev | 
-		let extText : String = ev.value->iterate(e; acc : String = '' |
-			acc + e.toString()
-		) in
-		extText.indexOf('skip') >= 0 and extText.indexOf('true') >= 0
-	);
+	self.hasExtensionKeyValue('inclusion', '3');
 
 helper context VBPMN!FlowElement def: isInExcludedContainer : Boolean =
 	if self.refImmediateComposite().oclIsUndefined() then

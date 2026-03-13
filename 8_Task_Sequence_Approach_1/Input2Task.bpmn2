@@ -34,7 +34,7 @@
     </bpmn2:task>
     <bpmn2:sequenceFlow id="SequenceFlow_2" sourceRef="ParallelGateway_1" targetRef="Task_2">
       <bpmn2:extensionElements>
-          <sple:exclude>true</sple:exclude>
+          <sple:inclusion>2</sple:inclusion>
       </bpmn2:extensionElements>
     </bpmn2:sequenceFlow>
     <bpmn2:task id="Task_3" name="Task B">
