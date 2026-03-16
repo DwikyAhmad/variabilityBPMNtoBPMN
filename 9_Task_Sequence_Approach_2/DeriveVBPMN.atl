@@ -1,0 +1,354 @@
+-- @path VBPMN=/variabilityBPMNtoBPMN/3_ATL_Metamodel/BPMN20.ecore
+-- @path BPMN=/variabilityBPMNtoBPMN/3_ATL_Metamodel/BPMN20.ecore
+
+module DeriveVarBPMN;
+
+create OUT : BPMN from IN : VBPMN;
+
+-- Checks key/value within the same extension entry to avoid cross-tag mixing
+helper context VBPMN!BaseElement def: hasExtensionKeyValue(key : String, value : String) : Boolean =
+	self.extensionValues->notEmpty() and
+	self.extensionValues->exists(ev |
+		ev.value->exists(e |
+			let entryText : String = e.toString() in
+			(entryText.indexOf(':' + key + '=') >= 0 or entryText.indexOf(key + '=') >= 0) and
+			(entryText.indexOf('text=' + value + ']') >= 0 or
+			 entryText.indexOf('text=' + value + ',') >= 0 or
+			 entryText.indexOf('text=' + value + ')') >= 0)
+		)
+	);
+
+helper context VBPMN!BaseElement def: isExcluded : Boolean =
+	self.hasExtensionKeyValue('inclusion', '2');
+
+helper context VBPMN!BaseElement def: isSkipped : Boolean =
+	self.hasExtensionKeyValue('inclusion', '3');
+
+helper context VBPMN!FlowElement def: isInExcludedContainer : Boolean =
+	if self.refImmediateComposite().oclIsUndefined() then
+		false
+	else
+		if self.refImmediateComposite().oclIsKindOf(VBPMN!SubProcess) then
+			self.refImmediateComposite().isExcluded
+		else
+			false
+		endif
+	endif;
+
+helper context VBPMN!FlowNode def: getNextValidTarget : VBPMN!FlowNode =
+	if not self.isSkipped then
+		self
+	else
+		-- get element after exclusion element
+		if self.outgoing->isEmpty() or self.outgoing->first().targetRef.oclIsUndefined() then
+			OclUndefined -- Safety check for dead ends
+		else
+			self.outgoing->first().targetRef.getNextValidTarget
+		endif
+	endif;
+
+-- Helper to check if element has receiver extension
+helper context VBPMN!FlowNode def: hasReceiver : Boolean =
+	if self.extensionValues->isEmpty() then
+		false
+	else
+		self.extensionValues->exists(ev | 
+			let extText : String = ev.value->iterate(e; acc : String = '' |
+				acc + e.toString()
+			) in
+			extText.indexOf('receiver') >= 0
+		)
+	endif;
+
+-- Helper to check if element has connector extension
+helper context VBPMN!FlowNode def: hasConnector : Boolean =
+	if self.extensionValues->isEmpty() then
+		false
+	else
+		self.extensionValues->exists(ev | 
+			let extText : String = ev.value->iterate(e; acc : String = '' |
+				acc + e.toString()
+			) in
+			extText.indexOf('connector') >= 0
+		)
+	endif;
+
+-- Raw text of connector extension entry
+helper context VBPMN!FlowNode def: getConnectorText : String =
+	if self.extensionValues->isEmpty() then
+		''
+	else
+		let connectorEv : VBPMN!ExtensionAttributeValue = self.extensionValues->select(ev |
+			let extText : String = ev.value->iterate(e; acc : String = '' |
+				acc + e.toString()
+			) in
+			extText.indexOf('connector') >= 0
+		)->first() in
+		if connectorEv.oclIsUndefined() then
+			''
+		else
+			connectorEv.value->iterate(e; acc : String = '' |
+				acc + e.toString()
+			)
+		endif
+	endif;
+
+-- Parse connector@name value
+helper context VBPMN!FlowNode def: getConnectorName : String =
+	let fullText : String = self.getConnectorText in
+	let marker : String = 'name=' in
+	if fullText = '' or fullText.indexOf(marker) < 0 then
+		''
+	else
+		let afterName : String = fullText.substring(fullText.indexOf(marker) + marker.size() + 1, fullText.size()) in
+		if afterName.indexOf(',') >= 0 then
+			afterName.substring(1, afterName.indexOf(','))
+		else
+			if afterName.indexOf(']') >= 0 then
+				afterName.substring(1, afterName.indexOf(']'))
+			else
+				if afterName.indexOf(')') >= 0 then
+					afterName.substring(1, afterName.indexOf(')'))
+				else
+					afterName
+				endif
+			endif
+		endif
+	endif;
+
+-- Parse connector@select value
+helper context VBPMN!FlowNode def: getConnectorSelectId : String =
+	let fullText : String = self.getConnectorText in
+	let marker : String = 'select=' in
+	if fullText = '' or fullText.indexOf(marker) < 0 then
+		''
+	else
+		let afterSelect : String = fullText.substring(fullText.indexOf(marker) + marker.size() + 1, fullText.size()) in
+		if afterSelect.indexOf(',') >= 0 then
+			afterSelect.substring(1, afterSelect.indexOf(','))
+		else
+			if afterSelect.indexOf(']') >= 0 then
+				afterSelect.substring(1, afterSelect.indexOf(']'))
+			else
+				if afterSelect.indexOf(')') >= 0 then
+					afterSelect.substring(1, afterSelect.indexOf(')'))
+				else
+					afterSelect
+				endif
+			endif
+		endif
+	endif;
+
+-- True when receiver includes the connector name option
+helper context VBPMN!FlowNode def: acceptsConnector(connectorName : String) : Boolean =
+	connectorName <> '' and self.hasExtensionKeyValue('receiver', connectorName);
+
+-- Resolve connector target by connector@select and validate receiver option by connector@name
+helper context VBPMN!FlowNode def: getConnectorTargetNode : VBPMN!FlowNode =
+	if not self.hasConnector then
+		OclUndefined
+	else
+		let selectedTargetId : String = self.getConnectorSelectId in
+		let connectorName : String = self.getConnectorName in
+		if selectedTargetId = '' or connectorName = '' then
+			OclUndefined
+		else
+			VBPMN!FlowNode.allInstances()->select(fn |
+				fn.id = selectedTargetId and
+				fn.acceptsConnector(connectorName) and
+				not fn.isExcluded and
+				not fn.isSkipped and
+				not fn.isInExcludedContainer
+			)->first()
+		endif
+	endif;
+
+-- Build new sequence flow from connector metadata when no explicit outgoing sequence flow exists
+helper context VBPMN!FlowNode def: shouldGenerateConnectorFlow : Boolean =
+	self.hasConnector and
+	not self.isExcluded and
+	not self.isSkipped and
+	not self.isInExcludedContainer and
+	not self.getConnectorTargetNode.oclIsUndefined() and
+	self.outgoing->isEmpty();
+
+-- Collect generated connector-driven sequence flows for a process
+helper context VBPMN!Process def: generatedConnectorFlows : Sequence(BPMN!SequenceFlow) =
+	VBPMN!FlowNode.allInstances()
+		->select(fn | fn.refImmediateComposite() = self)
+		->select(fn | fn.shouldGenerateConnectorFlow)
+		->collect(fn | thisModule.ConnectorSequenceFlow(fn));
+
+-- Transform Definitions (root container)
+rule Definitions {
+	from s : VBPMN!Definitions
+	to t : BPMN!Definitions (
+		id <- s.id,
+		name <- s.name,
+		targetNamespace <- s.targetNamespace,
+		exporter <- s.exporter,
+		exporterVersion <- s.exporterVersion,
+		rootElements <- s.rootElements
+	)
+}
+
+-- Transform Process
+rule Process {
+	from s : VBPMN!Process
+	to t : BPMN!Process (
+		id <- s.id,
+		name <- s.name,
+		isExecutable <- s.isExecutable,
+		flowElements <- s.flowElements->union(s.generatedConnectorFlows)
+	)
+}
+
+unique lazy rule ConnectorSequenceFlow {
+	from s : VBPMN!FlowNode (s.shouldGenerateConnectorFlow)
+	to t : BPMN!SequenceFlow (
+		id <- 'SF_CONN_' + s.id + '_' + s.getConnectorName,
+		sourceRef <- s,
+		targetRef <- s.getConnectorTargetNode
+	)
+}
+
+rule ReconnectSequenceFlow {
+	from
+		s : VBPMN!SequenceFlow (
+			not s.isExcluded and
+			not s.sourceRef.isExcluded and
+			not s.isInExcludedContainer and
+			not s.targetRef.isExcluded
+		)
+	to
+		t : BPMN!SequenceFlow (
+			id <- s.id,
+			name <- s.name,
+			
+			sourceRef <- s.sourceRef,
+			
+			-- If source has connector to a receiver task, redirect to that task
+			-- Otherwise use the normal target (with skip handling)
+			targetRef <- 
+				if not s.sourceRef.getConnectorTargetNode.oclIsUndefined() then
+					s.sourceRef.getConnectorTargetNode
+				else
+					s.targetRef.getNextValidTarget
+				endif
+		)	
+}
+
+
+-- Keep other element
+
+rule StartEvent {
+	from s : VBPMN!StartEvent (
+		not s.isExcluded and
+		not s.isInExcludedContainer and
+		not s.isSkipped
+	)
+	to t : BPMN!StartEvent (
+		id <- s.id, name <- s.name
+	)
+}
+
+rule EndEvent {
+	from s : VBPMN!EndEvent (
+		not s.isExcluded and
+		not s.isInExcludedContainer and
+		not s.isSkipped
+	)
+	to t : BPMN!EndEvent (
+		id <- s.id, name <- s.name
+	)
+}
+
+rule ExclusiveGateway {
+	from s : VBPMN!ExclusiveGateway (
+		not s.isExcluded and
+		not s.isInExcludedContainer and
+		not s.isSkipped
+	)
+	to t : BPMN!ExclusiveGateway (
+		id <- s.id, name <- s.name
+	)
+}
+
+rule ParallelGateway {
+	from s : VBPMN!ParallelGateway (
+		not s.isExcluded and
+		not s.isInExcludedContainer and
+		not s.isSkipped
+	)
+	to t : BPMN!ParallelGateway (
+		id <- s.id, name <- s.name
+	)
+}
+
+rule InclusiveGateway {
+	from s : VBPMN!InclusiveGateway (
+		not s.isExcluded and
+		not s.isInExcludedContainer and
+		not s.isSkipped
+	)
+	to t : BPMN!InclusiveGateway (
+		id <- s.id, name <- s.name
+	)
+}
+
+rule Task {
+	from s: VBPMN!Task (
+		not s.isExcluded and
+		not s.isInExcludedContainer and
+		not s.isSkipped
+	)
+	to t: BPMN!Task (
+		id <- s.id, name <- s.name
+	)
+}
+
+rule ReceiveTask {
+	from s: VBPMN!ReceiveTask (
+		not s.isExcluded and
+		not s.isInExcludedContainer and
+		not s.isSkipped
+	)
+	to t: BPMN!ReceiveTask (
+		id <- s.id, name <- s.name	
+	)
+}
+
+rule UserTask {
+	from s: VBPMN!UserTask (
+		not s.isExcluded and
+		not s.isInExcludedContainer and
+		not s.isSkipped
+	)
+	to t: BPMN!UserTask (
+		id <- s.id, name <- s.name
+	)
+}
+
+rule ManualTask {
+	from s: VBPMN!ManualTask (
+		not s.isExcluded and
+		not s.isInExcludedContainer and
+		not s.isSkipped
+	)
+	to t: BPMN!ManualTask (
+		id <- s.id, name <- s.name
+	)
+}
+
+rule SubProcess {
+	from s: VBPMN!SubProcess (
+		not s.isExcluded and
+		not s.isSkipped
+	)
+	to t: BPMN!SubProcess (
+		id <- s.id,
+		name <- s.name,
+		triggeredByEvent <- s.triggeredByEvent,
+		flowElements <- s.flowElements
+	)
+}
