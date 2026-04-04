@@ -338,6 +338,9 @@ rule InclusiveGateway {
 
 rule Task {
 	from s: VBPMN!Task (
+		not s.oclIsKindOf(VBPMN!UserTask) and
+		not s.oclIsKindOf(VBPMN!ManualTask) and
+		not s.oclIsKindOf(VBPMN!ReceiveTask) and
 		not s.isExcluded and
 		not s.isInExcludedContainer and
 		not s.isSkipped

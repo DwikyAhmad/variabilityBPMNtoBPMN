@@ -19,10 +19,10 @@ helper context VBPMN!BaseElement def: hasExtensionKeyValue(key : String, value :
 	);
 
 helper context VBPMN!BaseElement def: isExcluded : Boolean =
-	self.hasExtensionKeyValue('inclusion', '2');
+	self.hasExtensionKeyValue('presenceStatus', '2');
 
 helper context VBPMN!BaseElement def: isSkipped : Boolean =
-	self.hasExtensionKeyValue('inclusion', '3');
+	self.hasExtensionKeyValue('presenceStatus', '3');
 
 helper context VBPMN!FlowElement def: isInExcludedContainer : Boolean =
 	if self.refImmediateComposite().oclIsUndefined() then
@@ -230,6 +230,9 @@ rule InclusiveGateway {
 
 rule Task {
 	from s: VBPMN!Task (
+		not s.oclIsKindOf(VBPMN!UserTask) and
+		not s.oclIsKindOf(VBPMN!ManualTask) and
+		not s.oclIsKindOf(VBPMN!ReceiveTask) and
 		not s.isExcluded and
 		not s.isInExcludedContainer and
 		not s.isSkipped
