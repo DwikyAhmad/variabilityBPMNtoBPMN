@@ -19,10 +19,10 @@ helper context VBPMN!BaseElement def: hasExtensionKeyValue(key : String, value :
 	);
 
 helper context VBPMN!BaseElement def: isExcluded : Boolean =
-	self.hasExtensionKeyValue('inclusion', '2');
+	self.hasExtensionKeyValue('presenceStatus', '2');
 
 helper context VBPMN!BaseElement def: isSkipped : Boolean =
-	self.hasExtensionKeyValue('inclusion', '3');
+	self.hasExtensionKeyValue('presenceStatus', '3');
 
 helper context VBPMN!FlowElement def: isInExcludedContainer : Boolean =
 	if self.refImmediateComposite().oclIsUndefined() then
