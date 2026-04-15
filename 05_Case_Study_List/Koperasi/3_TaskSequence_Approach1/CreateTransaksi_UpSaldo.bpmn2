@@ -59,17 +59,19 @@
     </bpmn2:task>
     <bpmn2:sequenceFlow id="SequenceFlow_13" name="Tidak Berhasil" sourceRef="ExclusiveGateway_2" targetRef="Task_9"/>
     <bpmn2:task id="Task_10" name="Update Saldo Simpanan">
+      <bpmn2:extensionElements>
+        <sple:receiver xsi:type="xs:anyType"/>
+      </bpmn2:extensionElements>
       <bpmn2:incoming>SequenceFlow_21</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_6</bpmn2:outgoing>
-      <bpmn2:extensionElements>
-      	<sple:connector>Task_11</sple:connector></bpmn2:extensionElements>
     </bpmn2:task>
     <bpmn2:sequenceFlow id="SequenceFlow_14" name="Berhasil" sourceRef="ExclusiveGateway_2" targetRef="ExclusiveGateway_7"/>
     <bpmn2:task id="Task_11" name="Buat Transaksi Simpanan">
+      <bpmn2:extensionElements>
+        <sple:connector xsi:type="xs:anyType">Task_10</sple:connector>
+      </bpmn2:extensionElements>
       <bpmn2:incoming>SequenceFlow_22</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_18</bpmn2:outgoing>
-      <bpmn2:extensionElements>
-      	<sple:receiver></sple:receiver></bpmn2:extensionElements>
     </bpmn2:task>
     <bpmn2:endEvent id="EndEvent_4" name="End Event 1">
       <bpmn2:incoming>SequenceFlow_19</bpmn2:incoming>
@@ -102,11 +104,15 @@
       <bpmn2:outgoing>SequenceFlow_22</bpmn2:outgoing>
     </bpmn2:exclusiveGateway>
     <bpmn2:sequenceFlow id="SequenceFlow_21" name="updateFirst" sourceRef="ExclusiveGateway_7" targetRef="Task_10">
-    	<bpmn2:extensionElements>
-    		<sple:presenceStatus>1</sple:presenceStatus></bpmn2:extensionElements></bpmn2:sequenceFlow>
+      <bpmn2:extensionElements>
+        <sple:presenceStatus xsi:type="xs:anyType">2</sple:presenceStatus>
+      </bpmn2:extensionElements>
+    </bpmn2:sequenceFlow>
     <bpmn2:sequenceFlow id="SequenceFlow_22" name="transaksiFirst" sourceRef="ExclusiveGateway_7" targetRef="Task_11">
-    	<bpmn2:extensionElements>
-    		<sple:presenceStatus>2</sple:presenceStatus></bpmn2:extensionElements></bpmn2:sequenceFlow>
+      <bpmn2:extensionElements>
+        <sple:presenceStatus xsi:type="xs:anyType">1</sple:presenceStatus>
+      </bpmn2:extensionElements>
+    </bpmn2:sequenceFlow>
   </bpmn2:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_Process_1" bpmnElement="Process_1">
@@ -135,9 +141,9 @@
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_Task_5" bpmnElement="Task_5" isExpanded="true">
-        <dc:Bounds height="50.0" width="110.0" x="706.0" y="252.0"/>
+        <dc:Bounds height="50.0" width="110.0" x="706.0" y="280.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_13" labelStyle="BPMNLabelStyle_1">
-          <dc:Bounds height="42.0" width="92.0" x="715.0" y="256.0"/>
+          <dc:Bounds height="42.0" width="92.0" x="715.0" y="284.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_ExclusiveGateway_1" bpmnElement="ExclusiveGateway_1" isMarkerVisible="true">
@@ -235,10 +241,10 @@
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_7" bpmnElement="SequenceFlow_7" sourceElement="BPMNShape_ExclusiveGateway_1" targetElement="BPMNShape_Task_5">
         <di:waypoint xsi:type="dc:Point" x="616.0" y="169.0"/>
-        <di:waypoint xsi:type="dc:Point" x="616.0" y="277.0"/>
-        <di:waypoint xsi:type="dc:Point" x="706.0" y="277.0"/>
+        <di:waypoint xsi:type="dc:Point" x="616.0" y="305.0"/>
+        <di:waypoint xsi:type="dc:Point" x="706.0" y="305.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_14">
-          <dc:Bounds height="42.0" width="85.0" x="574.0" y="269.0"/>
+          <dc:Bounds height="42.0" width="85.0" x="574.0" y="283.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_9" bpmnElement="SequenceFlow_9" sourceElement="BPMNShape_Task_3" targetElement="BPMNShape_ExclusiveGateway_1">
@@ -291,8 +297,8 @@
         <bpmndi:BPMNLabel id="BPMNLabel_36"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_1" bpmnElement="SequenceFlow_1" sourceElement="BPMNShape_Task_5" targetElement="BPMNShape_ExclusiveGateway_3">
-        <di:waypoint xsi:type="dc:Point" x="816.0" y="277.0"/>
-        <di:waypoint xsi:type="dc:Point" x="855.0" y="277.0"/>
+        <di:waypoint xsi:type="dc:Point" x="816.0" y="305.0"/>
+        <di:waypoint xsi:type="dc:Point" x="855.0" y="305.0"/>
         <di:waypoint xsi:type="dc:Point" x="855.0" y="176.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_3"/>
       </bpmndi:BPMNEdge>
