@@ -86,17 +86,17 @@
     </bpmn2:exclusiveGateway>
     <bpmn2:sequenceFlow id="SequenceFlow_16" sourceRef="Task_9" targetRef="ExclusiveGateway_5"></bpmn2:sequenceFlow>
     <bpmn2:sequenceFlow id="SequenceFlow_19" sourceRef="ExclusiveGateway_5" targetRef="EndEvent_4"/>
-    <bpmn2:exclusiveGateway id="ExclusiveGateway_4" name="Exclusive Gateway 4" gatewayDirection="Converging">
+    <bpmn2:parallelGateway id="ExclusiveGateway_4" name="Exclusive Gateway 4" gatewayDirection="Converging">
       <bpmn2:outgoing>SequenceFlow_8</bpmn2:outgoing>
       <bpmn2:extensionElements>
       	<sple:receiver>1</sple:receiver>
-      	<sple:receiver>2</sple:receiver></bpmn2:extensionElements></bpmn2:exclusiveGateway>
+	      	<sple:receiver>2</sple:receiver></bpmn2:extensionElements></bpmn2:parallelGateway>
     <bpmn2:sequenceFlow id="SequenceFlow_8" sourceRef="ExclusiveGateway_4" targetRef="ExclusiveGateway_5"/>
-    <bpmn2:exclusiveGateway id="ExclusiveGateway_7" name="Exclusive Gateway 7" gatewayDirection="Diverging">
+    <bpmn2:parallelGateway id="ExclusiveGateway_7" name="Exclusive Gateway 7" gatewayDirection="Diverging">
       <bpmn2:incoming>SequenceFlow_14</bpmn2:incoming>
       <bpmn2:extensionElements>
       	<sple:connector name="0" select="Task_10"></sple:connector></bpmn2:extensionElements>
-    </bpmn2:exclusiveGateway>
+    </bpmn2:parallelGateway>
   </bpmn2:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_Process_1" bpmnElement="Process_1">

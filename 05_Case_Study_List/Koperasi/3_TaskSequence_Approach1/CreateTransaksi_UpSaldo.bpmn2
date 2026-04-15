@@ -91,18 +91,18 @@
     </bpmn2:exclusiveGateway>
     <bpmn2:sequenceFlow id="SequenceFlow_16" sourceRef="Task_9" targetRef="ExclusiveGateway_5"/>
     <bpmn2:sequenceFlow id="SequenceFlow_19" sourceRef="ExclusiveGateway_5" targetRef="EndEvent_4"/>
-    <bpmn2:exclusiveGateway id="ExclusiveGateway_4" name="Exclusive Gateway 4" gatewayDirection="Converging">
+    <bpmn2:parallelGateway id="ExclusiveGateway_4" name="Exclusive Gateway 4" gatewayDirection="Converging">
       <bpmn2:incoming>SequenceFlow_18</bpmn2:incoming>
       <bpmn2:incoming>SequenceFlow_6</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_8</bpmn2:outgoing>
-    </bpmn2:exclusiveGateway>
+    </bpmn2:parallelGateway>
     <bpmn2:sequenceFlow id="SequenceFlow_6" sourceRef="Task_10" targetRef="ExclusiveGateway_4"/>
     <bpmn2:sequenceFlow id="SequenceFlow_8" sourceRef="ExclusiveGateway_4" targetRef="ExclusiveGateway_5"/>
-    <bpmn2:exclusiveGateway id="ExclusiveGateway_7" name="Exclusive Gateway 7" gatewayDirection="Diverging">
+    <bpmn2:parallelGateway id="ExclusiveGateway_7" name="Exclusive Gateway 7" gatewayDirection="Diverging">
       <bpmn2:incoming>SequenceFlow_14</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_21</bpmn2:outgoing>
       <bpmn2:outgoing>SequenceFlow_22</bpmn2:outgoing>
-    </bpmn2:exclusiveGateway>
+    </bpmn2:parallelGateway>
     <bpmn2:sequenceFlow id="SequenceFlow_21" name="updateFirst" sourceRef="ExclusiveGateway_7" targetRef="Task_10">
       <bpmn2:extensionElements>
         <sple:presenceStatus xsi:type="xs:anyType">2</sple:presenceStatus>
