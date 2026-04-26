@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- origin at X=0.0 Y=0.0 -->
-<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:ext="http://org.eclipse.bpmn2/ext" xmlns:xs="http://www.w3.org/2001/XMLSchema" id="_bCoTcAo0EfGv3ZY7ytEv0A" exporter="org.eclipse.bpmn2.modeler.core" exporterVersion="1.5.4.RC1-v20220528-0836-B1">
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:ext="http://org.eclipse.bpmn2/ext" xmlns:sple="http://sple/bpmn/extensions" xmlns:xs="http://www.w3.org/2001/XMLSchema" id="_bCoTcAo0EfGv3ZY7ytEv0A" exporter="org.eclipse.bpmn2.modeler.core" exporterVersion="1.5.4.RC1-v20220528-0836-B1">
   <bpmn2:process id="Process_1" name="Process 1" isExecutable="false">
     <bpmn2:startEvent id="StartEvent_1" name="Start">
       <bpmn2:outgoing>SequenceFlow_2</bpmn2:outgoing>
@@ -11,6 +11,9 @@
     </bpmn2:task>
     <bpmn2:sequenceFlow id="SequenceFlow_2" sourceRef="StartEvent_1" targetRef="Task_2"/>
     <bpmn2:task id="Task_3" name="Memilih Jenis Simpanan">
+      <bpmn2:extensionElements>
+        <sple:inclusionVariability xsi:type="xs:anyType">3</sple:inclusionVariability>
+      </bpmn2:extensionElements>
       <bpmn2:incoming>SequenceFlow_3</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_9</bpmn2:outgoing>
     </bpmn2:task>
@@ -21,6 +24,9 @@
     </bpmn2:task>
     <bpmn2:sequenceFlow id="SequenceFlow_5" name="Simpanan Pokok / Wajib" sourceRef="ExclusiveGateway_1" targetRef="ExclusiveGateway_3"/>
     <bpmn2:task id="Task_5" name="Masukkan Nominal">
+      <bpmn2:extensionElements>
+        <sple:inclusionVariability xsi:type="xs:anyType">3</sple:inclusionVariability>
+      </bpmn2:extensionElements>
       <bpmn2:incoming>SequenceFlow_7</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_1</bpmn2:outgoing>
     </bpmn2:task>
@@ -52,9 +58,17 @@
       <bpmn2:outgoing>SequenceFlow_16</bpmn2:outgoing>
     </bpmn2:task>
     <bpmn2:sequenceFlow id="SequenceFlow_13" name="Tidak Berhasil" sourceRef="ExclusiveGateway_2" targetRef="Task_9"/>
-    <bpmn2:task id="Task_10" name="Update Saldo Simpanan"/>
-    <bpmn2:sequenceFlow id="SequenceFlow_14" name="Berhasil" sourceRef="ExclusiveGateway_2" targetRef="ParallelGateway_7"/>
-    <bpmn2:task id="Task_11" name="Buat Transaksi Simpanan"/>
+    <bpmn2:task id="Task_10" name="Update Saldo Simpanan">
+    	<bpmn2:extensionElements>
+    		<sple:connector name="2" select="Task_11"></sple:connector>
+    		<sple:receiver>0</sple:receiver>
+    		<sple:receiver>1</sple:receiver></bpmn2:extensionElements></bpmn2:task>
+    <bpmn2:sequenceFlow id="SequenceFlow_14" name="Berhasil" sourceRef="ExclusiveGateway_2" targetRef="ExclusiveGateway_7"/>
+    <bpmn2:task id="Task_11" name="Buat Transaksi Simpanan">
+    	<bpmn2:extensionElements>
+    		<sple:receiver>0</sple:receiver>
+    		<sple:receiver>2</sple:receiver>
+    		<sple:connector name="1" select="ExclusiveGateway_4"></sple:connector></bpmn2:extensionElements></bpmn2:task>
     <bpmn2:endEvent id="EndEvent_4" name="End Event 1">
       <bpmn2:incoming>SequenceFlow_19</bpmn2:incoming>
     </bpmn2:endEvent>
@@ -70,14 +84,18 @@
       <bpmn2:incoming>SequenceFlow_8</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_19</bpmn2:outgoing>
     </bpmn2:exclusiveGateway>
-    <bpmn2:sequenceFlow id="SequenceFlow_16" sourceRef="Task_9" targetRef="ExclusiveGateway_5"/>
+    <bpmn2:sequenceFlow id="SequenceFlow_16" sourceRef="Task_9" targetRef="ExclusiveGateway_5"></bpmn2:sequenceFlow>
     <bpmn2:sequenceFlow id="SequenceFlow_19" sourceRef="ExclusiveGateway_5" targetRef="EndEvent_4"/>
-    <bpmn2:parallelGateway id="ParallelGateway_4" name="Parallel Gateway 4" gatewayDirection="Converging">
+    <bpmn2:parallelGateway id="ExclusiveGateway_4" name="Exclusive Gateway 4" gatewayDirection="Converging">
       <bpmn2:outgoing>SequenceFlow_8</bpmn2:outgoing>
-    </bpmn2:parallelGateway>
-    <bpmn2:sequenceFlow id="SequenceFlow_8" sourceRef="ParallelGateway_4" targetRef="ExclusiveGateway_5"/>
-    <bpmn2:parallelGateway id="ParallelGateway_7" name="Parallel Gateway 7" gatewayDirection="Diverging">
+      <bpmn2:extensionElements>
+      	<sple:receiver>1</sple:receiver>
+	      	<sple:receiver>2</sple:receiver></bpmn2:extensionElements></bpmn2:parallelGateway>
+    <bpmn2:sequenceFlow id="SequenceFlow_8" sourceRef="ExclusiveGateway_4" targetRef="ExclusiveGateway_5"/>
+    <bpmn2:parallelGateway id="ExclusiveGateway_7" name="Exclusive Gateway 7" gatewayDirection="Diverging">
       <bpmn2:incoming>SequenceFlow_14</bpmn2:incoming>
+      <bpmn2:extensionElements>
+      	<sple:connector name="0" select="Task_10"></sple:connector></bpmn2:extensionElements>
     </bpmn2:parallelGateway>
   </bpmn2:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
@@ -172,13 +190,13 @@
           <dc:Bounds height="84.0" width="80.0" x="1774.0" y="504.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="BPMNShape_ParallelGateway_4" bpmnElement="ParallelGateway_4" isMarkerVisible="true">
+      <bpmndi:BPMNShape id="BPMNShape_ExclusiveGateway_4" bpmnElement="ExclusiveGateway_4" isMarkerVisible="true">
         <dc:Bounds height="50.0" width="50.0" x="1700.0" y="560.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_15" labelStyle="BPMNLabelStyle_1">
           <dc:Bounds height="84.0" width="80.0" x="1685.0" y="610.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="BPMNShape_ParallelGateway_7" bpmnElement="ParallelGateway_7" isMarkerVisible="true">
+      <bpmndi:BPMNShape id="BPMNShape_ExclusiveGateway_7" bpmnElement="ExclusiveGateway_7" isMarkerVisible="true">
         <dc:Bounds height="50.0" width="50.0" x="1359.0" y="593.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_38" labelStyle="BPMNLabelStyle_1">
           <dc:Bounds height="84.0" width="80.0" x="1344.0" y="643.0"/>
@@ -248,7 +266,7 @@
           <dc:Bounds height="42.0" width="65.0" x="1413.0" y="490.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_14" bpmnElement="SequenceFlow_14" sourceElement="BPMNShape_ExclusiveGateway_2" targetElement="BPMNShape_ParallelGateway_7">
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_14" bpmnElement="SequenceFlow_14" sourceElement="BPMNShape_ExclusiveGateway_2" targetElement="BPMNShape_ExclusiveGateway_7">
         <di:waypoint xsi:type="dc:Point" x="1335.0" y="510.0"/>
         <di:waypoint xsi:type="dc:Point" x="1335.0" y="618.0"/>
         <di:waypoint xsi:type="dc:Point" x="1359.0" y="618.0"/>
@@ -282,7 +300,7 @@
         <di:waypoint xsi:type="dc:Point" x="1900.0" y="485.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_31"/>
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_8" bpmnElement="SequenceFlow_8" sourceElement="BPMNShape_ParallelGateway_4" targetElement="BPMNShape_ExclusiveGateway_5">
+      <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_8" bpmnElement="SequenceFlow_8" sourceElement="BPMNShape_ExclusiveGateway_4" targetElement="BPMNShape_ExclusiveGateway_5">
         <di:waypoint xsi:type="dc:Point" x="1750.0" y="585.0"/>
         <di:waypoint xsi:type="dc:Point" x="1814.0" y="585.0"/>
         <di:waypoint xsi:type="dc:Point" x="1814.0" y="504.0"/>

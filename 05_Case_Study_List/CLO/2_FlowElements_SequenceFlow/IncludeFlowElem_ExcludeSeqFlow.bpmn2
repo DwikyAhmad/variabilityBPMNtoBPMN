@@ -27,7 +27,7 @@
     <bpmn2:sequenceFlow id="SequenceFlow_6" sourceRef="UserTask_4" targetRef="ManualTask_1"/>
     <bpmn2:sequenceFlow id="SequenceFlow_7" name="NO" sourceRef="InclusiveGateway_1" targetRef="InclusiveGateway_3">
       <bpmn2:extensionElements>
-        <sple:presenceStatus xsi:type="xs:anyType">2</sple:presenceStatus>
+      	<sple:inclusionVariability>2</sple:inclusionVariability>
       </bpmn2:extensionElements>
     </bpmn2:sequenceFlow>
     <bpmn2:manualTask id="ManualTask_2" name="Grade Student Assement Results">
@@ -46,14 +46,13 @@
     <bpmn2:sequenceFlow id="SequenceFlow_10" sourceRef="UserTask_5" targetRef="EndEvent_1"/>
     <bpmn2:userTask id="UserTask_1" name="CRUD Sub-CLO">
       <bpmn2:extensionElements>
-        <sple:presenceStatus xsi:type="xs:anyType">1</sple:presenceStatus>
-      </bpmn2:extensionElements>
+      	<sple:inclusionVariability>1</sple:inclusionVariability></bpmn2:extensionElements>
       <bpmn2:incoming>SequenceFlow_11</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_12</bpmn2:outgoing>
     </bpmn2:userTask>
     <bpmn2:userTask id="UserTask_2" name="Map Sub-CLO to CLO">
       <bpmn2:extensionElements>
-        <sple:presenceStatus xsi:type="xs:anyType">1</sple:presenceStatus>
+      	<sple:inclusionVariability>1</sple:inclusionVariability>
       </bpmn2:extensionElements>
       <bpmn2:incoming>SequenceFlow_12</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_4</bpmn2:outgoing>

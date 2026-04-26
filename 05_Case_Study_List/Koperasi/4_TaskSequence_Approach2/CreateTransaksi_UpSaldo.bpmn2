@@ -59,16 +59,20 @@
     </bpmn2:task>
     <bpmn2:sequenceFlow id="SequenceFlow_13" name="Tidak Berhasil" sourceRef="ExclusiveGateway_2" targetRef="Task_9"/>
     <bpmn2:task id="Task_10" name="Update Saldo Simpanan">
-    	<bpmn2:extensionElements>
-    		<sple:connector name="2" select="ExclusiveGateway_4"></sple:connector>
-    		<sple:receiver>0</sple:receiver>
-    		<sple:receiver>1</sple:receiver></bpmn2:extensionElements></bpmn2:task>
+      <bpmn2:extensionElements>
+        <sple:connector xsi:type="xs:anyType" name="2" select="ExclusiveGateway_4"/>
+        <sple:receiver xsi:type="xs:anyType">0</sple:receiver>
+        <sple:receiver xsi:type="xs:anyType">1</sple:receiver>
+      </bpmn2:extensionElements>
+    </bpmn2:task>
     <bpmn2:sequenceFlow id="SequenceFlow_14" name="Berhasil" sourceRef="ExclusiveGateway_2" targetRef="ExclusiveGateway_7"/>
     <bpmn2:task id="Task_11" name="Buat Transaksi Simpanan">
-    	<bpmn2:extensionElements>
-    		<sple:receiver>0</sple:receiver>
-    		<sple:receiver>2</sple:receiver>
-    		<sple:connector name="1" select="Task_10"></sple:connector></bpmn2:extensionElements></bpmn2:task>
+      <bpmn2:extensionElements>
+        <sple:receiver xsi:type="xs:anyType">0</sple:receiver>
+        <sple:receiver xsi:type="xs:anyType">2</sple:receiver>
+        <sple:connector xsi:type="xs:anyType" name="1" select="Task_10"/>
+      </bpmn2:extensionElements>
+    </bpmn2:task>
     <bpmn2:endEvent id="EndEvent_4" name="End Event 1">
       <bpmn2:incoming>SequenceFlow_19</bpmn2:incoming>
     </bpmn2:endEvent>
@@ -84,32 +88,35 @@
       <bpmn2:incoming>SequenceFlow_8</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_19</bpmn2:outgoing>
     </bpmn2:exclusiveGateway>
-    <bpmn2:sequenceFlow id="SequenceFlow_16" sourceRef="Task_9" targetRef="ExclusiveGateway_5"></bpmn2:sequenceFlow>
+    <bpmn2:sequenceFlow id="SequenceFlow_16" sourceRef="Task_9" targetRef="ExclusiveGateway_5"/>
     <bpmn2:sequenceFlow id="SequenceFlow_19" sourceRef="ExclusiveGateway_5" targetRef="EndEvent_4"/>
     <bpmn2:parallelGateway id="ExclusiveGateway_4" name="Exclusive Gateway 4" gatewayDirection="Converging">
-      <bpmn2:outgoing>SequenceFlow_8</bpmn2:outgoing>
       <bpmn2:extensionElements>
-      	<sple:receiver>1</sple:receiver>
-	      	<sple:receiver>2</sple:receiver></bpmn2:extensionElements></bpmn2:parallelGateway>
+        <sple:receiver xsi:type="xs:anyType">1</sple:receiver>
+        <sple:receiver xsi:type="xs:anyType">2</sple:receiver>
+      </bpmn2:extensionElements>
+      <bpmn2:outgoing>SequenceFlow_8</bpmn2:outgoing>
+    </bpmn2:parallelGateway>
     <bpmn2:sequenceFlow id="SequenceFlow_8" sourceRef="ExclusiveGateway_4" targetRef="ExclusiveGateway_5"/>
     <bpmn2:parallelGateway id="ExclusiveGateway_7" name="Exclusive Gateway 7" gatewayDirection="Diverging">
-      <bpmn2:incoming>SequenceFlow_14</bpmn2:incoming>
       <bpmn2:extensionElements>
-      	<sple:connector name="0" select="Task_11"></sple:connector></bpmn2:extensionElements>
+        <sple:connector xsi:type="xs:anyType" name="0" select="Task_11"/>
+      </bpmn2:extensionElements>
+      <bpmn2:incoming>SequenceFlow_14</bpmn2:incoming>
     </bpmn2:parallelGateway>
   </bpmn2:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_Process_1" bpmnElement="Process_1">
       <bpmndi:BPMNShape id="BPMNShape_StartEvent_1" bpmnElement="StartEvent_1">
-        <dc:Bounds height="36.0" width="36.0" x="50.0" y="132.0"/>
+        <dc:Bounds height="36.0" width="36.0" x="190.0" y="132.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_1" labelStyle="BPMNLabelStyle_1">
-          <dc:Bounds height="21.0" width="38.0" x="49.0" y="168.0"/>
+          <dc:Bounds height="21.0" width="38.0" x="189.0" y="168.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_Task_2" bpmnElement="Task_2" isExpanded="true">
-        <dc:Bounds height="50.0" width="110.0" x="191.0" y="125.0"/>
+        <dc:Bounds height="50.0" width="110.0" x="270.0" y="125.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_4" labelStyle="BPMNLabelStyle_1">
-          <dc:Bounds height="63.0" width="102.0" x="195.0" y="119.0"/>
+          <dc:Bounds height="63.0" width="102.0" x="274.0" y="119.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_Task_3" bpmnElement="Task_3" isExpanded="true">
@@ -203,14 +210,14 @@
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_2" bpmnElement="SequenceFlow_2" sourceElement="BPMNShape_StartEvent_1" targetElement="BPMNShape_Task_2">
-        <di:waypoint xsi:type="dc:Point" x="86.0" y="150.0"/>
-        <di:waypoint xsi:type="dc:Point" x="138.0" y="150.0"/>
-        <di:waypoint xsi:type="dc:Point" x="191.0" y="150.0"/>
+        <di:waypoint xsi:type="dc:Point" x="226.0" y="150.0"/>
+        <di:waypoint xsi:type="dc:Point" x="248.0" y="150.0"/>
+        <di:waypoint xsi:type="dc:Point" x="270.0" y="150.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_5"/>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_3" bpmnElement="SequenceFlow_3" sourceElement="BPMNShape_Task_2" targetElement="BPMNShape_Task_3">
-        <di:waypoint xsi:type="dc:Point" x="301.0" y="150.0"/>
-        <di:waypoint xsi:type="dc:Point" x="353.0" y="150.0"/>
+        <di:waypoint xsi:type="dc:Point" x="380.0" y="150.0"/>
+        <di:waypoint xsi:type="dc:Point" x="393.0" y="150.0"/>
         <di:waypoint xsi:type="dc:Point" x="406.0" y="150.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_7"/>
       </bpmndi:BPMNEdge>

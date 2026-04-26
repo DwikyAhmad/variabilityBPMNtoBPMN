@@ -65,6 +65,52 @@ helper context VBPMN!SequenceFlow def: getBaseDerivedTarget : VBPMN!FlowNode =
 		self.targetRef.getNextValidTarget
 	endif;
 
+-- True when another equivalent base-derived flow should be preferred (deterministic by lower id)
+helper context VBPMN!SequenceFlow def: hasPreferredBaseEquivalentFlow : Boolean =
+	not self.getBaseDerivedTarget.oclIsUndefined() and
+	VBPMN!SequenceFlow.allInstancesFrom('IN')->exists(other |
+		other <> self and
+		other.isDerivableFlow and
+		not other.getBaseDerivedTarget.oclIsUndefined() and
+		other.sourceRef = self.sourceRef and
+		other.getBaseDerivedTarget = self.getBaseDerivedTarget and
+		other.id < self.id
+	);
+
+-- Keep only one sequence flow for each base-derived source-target pair (for gateway counting)
+helper context VBPMN!SequenceFlow def: isPrimaryBaseDerivedFlow : Boolean =
+	self.isDerivableFlow and
+	not self.getBaseDerivedTarget.oclIsUndefined() and
+	not self.hasPreferredBaseEquivalentFlow;
+
+-- Effective target after gateway revision (final rewired target)
+helper context VBPMN!SequenceFlow def: getRevisedDerivedTarget : VBPMN!FlowNode =
+	if self.getBaseDerivedTarget.oclIsUndefined() then
+		OclUndefined
+	else
+		self.getBaseDerivedTarget.getRevisedTarget
+	endif;
+
+-- True when another equivalent derived flow should be preferred (deterministic by lower id)
+helper context VBPMN!SequenceFlow def: hasPreferredEquivalentFlow : Boolean =
+	not self.getRevisedDerivedTarget.oclIsUndefined() and
+	VBPMN!SequenceFlow.allInstancesFrom('IN')->exists(other |
+		other <> self and
+		other.isDerivableFlow and
+		not other.sourceRef.isSinglePathGateway and
+		not other.getRevisedDerivedTarget.oclIsUndefined() and
+		other.sourceRef = self.sourceRef and
+		other.getRevisedDerivedTarget = self.getRevisedDerivedTarget and
+		other.id < self.id
+	);
+
+-- Keep only one sequence flow for each final source-target pair
+helper context VBPMN!SequenceFlow def: isPrimaryDerivedFlow : Boolean =
+	self.isDerivableFlow and
+	not self.sourceRef.isSinglePathGateway and
+	not self.getRevisedDerivedTarget.oclIsUndefined() and
+	not self.hasPreferredEquivalentFlow;
+
 helper context VBPMN!FlowNode def: isGatewayNode : Boolean =
 	self.oclIsKindOf(VBPMN!ExclusiveGateway) or
 	self.oclIsKindOf(VBPMN!ParallelGateway) or
@@ -73,8 +119,7 @@ helper context VBPMN!FlowNode def: isGatewayNode : Boolean =
 -- Count incoming effective flows before gateway revision (explicit + connector-generated)
 helper context VBPMN!FlowNode def: getIncomingEffectiveFlowCount : Integer =
 	let incomingFromSequence : Integer = VBPMN!SequenceFlow.allInstancesFrom('IN')->select(sf |
-		sf.isDerivableFlow and
-		not sf.getBaseDerivedTarget.oclIsUndefined() and
+		sf.isPrimaryBaseDerivedFlow and
 		sf.getBaseDerivedTarget = self
 	)->size() in
 	let incomingFromConnector : Integer = VBPMN!FlowNode.allInstancesFrom('IN')->select(fn |
@@ -87,8 +132,7 @@ helper context VBPMN!FlowNode def: getIncomingEffectiveFlowCount : Integer =
 -- Count outgoing effective flows before gateway revision (explicit + connector-generated)
 helper context VBPMN!FlowNode def: getOutgoingEffectiveFlowCount : Integer =
 	let outgoingFromSequence : Integer = VBPMN!SequenceFlow.allInstancesFrom('IN')->select(sf |
-		sf.isDerivableFlow and
-		not sf.getBaseDerivedTarget.oclIsUndefined() and
+		sf.isPrimaryBaseDerivedFlow and
 		sf.sourceRef = self
 	)->size() in
 	let outgoingFromConnector : Integer =
@@ -320,9 +364,7 @@ unique lazy rule ConnectorSequenceFlow {
 rule ReconnectSequenceFlow {
 	from
 		s : VBPMN!SequenceFlow (
-			s.isDerivableFlow and
-			not s.sourceRef.isSinglePathGateway and
-			not s.getBaseDerivedTarget.oclIsUndefined()
+			s.isPrimaryDerivedFlow
 		)
 	to
 		t : BPMN!SequenceFlow (
@@ -332,7 +374,7 @@ rule ReconnectSequenceFlow {
 			sourceRef <- s.sourceRef,
 			
 			-- Apply post-derivation gateway revision on top of base target resolution
-			targetRef <- s.getBaseDerivedTarget.getRevisedTarget
+			targetRef <- s.getRevisedDerivedTarget
 		)	
 }
 
