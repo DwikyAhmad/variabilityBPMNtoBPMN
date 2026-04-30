@@ -5,7 +5,7 @@ module DeriveVarBPMN;
 
 create OUT : BPMN from IN : VBPMN;
 
--- Checks key, value within extensionElements e.g. does this element have inclusionVariability=2?
+-- Checks key/value within the same extension entry to avoid cross-tag mixing
 helper context VBPMN!BaseElement def: hasExtensionKeyValue(key : String, value : String) : Boolean =
 	self.extensionValues->notEmpty() and
 	self.extensionValues->exists(ev |
@@ -35,25 +35,6 @@ helper context VBPMN!FlowElement def: isInExcludedContainer : Boolean =
 		endif
 	endif;
 
--- Helper's helper function, Check if sequence flow still exist after derivation (bases of inclusionVariability only)
-helper context VBPMN!SequenceFlow def: isDerivableFlow : Boolean =
-	not self.sourceRef.oclIsUndefined() and
-	not self.targetRef.oclIsUndefined() and
-	not self.isExcluded and
-	not self.isInExcludedContainer and
-	not self.sourceRef.isSkipped and
-	not self.sourceRef.isExcluded and
-	not self.targetRef.isExcluded;
-
--- Get sequence flow's target after derive either from task sequence (connector target) or skip variability
-helper context VBPMN!SequenceFlow def: getBaseDerivedTarget : VBPMN!FlowNode =
-	if not self.sourceRef.getConnectorTargetNode.oclIsUndefined() then
-		self.sourceRef.getConnectorTargetNode
-	else
-		self.targetRef.getNextValidTarget
-	endif;
-
--- Recursive helper's helper function to find the next valid target if outgoing element is skipped or excluded
 helper context VBPMN!FlowNode def: getNextValidTarget : VBPMN!FlowNode =
 	if not self.isSkipped then
 		self
@@ -66,49 +47,25 @@ helper context VBPMN!FlowNode def: getNextValidTarget : VBPMN!FlowNode =
 		endif
 	endif;
 
--- Effective target after gateway revision (final rewired target)
-helper context VBPMN!SequenceFlow def: getRevisedDerivedTarget : VBPMN!FlowNode =
-	if self.getBaseDerivedTarget.oclIsUndefined() then
-		OclUndefined
+-- Sequence flow is kept by derivation before post-revision simplification
+helper context VBPMN!SequenceFlow def: isDerivableFlow : Boolean =
+	not self.sourceRef.oclIsUndefined() and
+	not self.targetRef.oclIsUndefined() and
+	not self.isExcluded and
+	not self.isInExcludedContainer and
+	not self.sourceRef.isSkipped and
+	not self.sourceRef.isExcluded and
+	not self.targetRef.isExcluded;
+
+-- Effective target after connector/skip handling (pre revision)
+helper context VBPMN!SequenceFlow def: getBaseDerivedTarget : VBPMN!FlowNode =
+	if not self.sourceRef.getConnectorTargetNode.oclIsUndefined() then
+		self.sourceRef.getConnectorTargetNode
 	else
-		self.getBaseDerivedTarget.getRevisedTarget
+		self.targetRef.getNextValidTarget
 	endif;
 
--- Post-derivation revision: bypass single-path gateways recursively
-helper context VBPMN!FlowNode def: getRevisedTarget : VBPMN!FlowNode =
-	if self.oclIsUndefined() then
-		OclUndefined
-	else
-		if self.isSinglePathGateway then
-			let nextTarget : VBPMN!FlowNode = self.getSingleOutgoingEffectiveTarget in
-			if nextTarget.oclIsUndefined() then
-				self
-			else
-				nextTarget.getRevisedTarget
-			endif
-		else
-			self
-		endif
-	endif;
-
--- Resolve single outgoing effective target (explicit flow or connector-generated flow)
-helper context VBPMN!FlowNode def: getSingleOutgoingEffectiveTarget : VBPMN!FlowNode =
-	if self.shouldGenerateConnectorFlow then
-		self.getConnectorTargetNode
-	else
-		let gatewayOut : VBPMN!SequenceFlow = VBPMN!SequenceFlow.allInstancesFrom('IN')->select(sf |
-			sf.isDerivableFlow and
-			not sf.getBaseDerivedTarget.oclIsUndefined() and
-			sf.sourceRef = self
-		)->first() in
-		if gatewayOut.oclIsUndefined() then
-			OclUndefined
-		else
-			gatewayOut.getBaseDerivedTarget
-		endif
-	endif;
-
--- Duplicate Sequence Flow Refinement Rule Duplicate Sequence Flow
+-- True when another equivalent base-derived flow should be preferred (deterministic by lower id)
 helper context VBPMN!SequenceFlow def: hasPreferredBaseEquivalentFlow : Boolean =
 	not self.getBaseDerivedTarget.oclIsUndefined() and
 	VBPMN!SequenceFlow.allInstancesFrom('IN')->exists(other |
@@ -120,18 +77,39 @@ helper context VBPMN!SequenceFlow def: hasPreferredBaseEquivalentFlow : Boolean 
 		other.id < self.id
 	);
 
--- Check if sequence flow exist after derivation before refinement single path gateway
+-- Keep only one sequence flow for each base-derived source-target pair (for gateway counting)
 helper context VBPMN!SequenceFlow def: isPrimaryBaseDerivedFlow : Boolean =
 	self.isDerivableFlow and
 	not self.getBaseDerivedTarget.oclIsUndefined() and
 	not self.hasPreferredBaseEquivalentFlow;
 
--- Check if sequence flow exist after derivation with refinement single path gateway
+-- Effective target after gateway revision (final rewired target)
+helper context VBPMN!SequenceFlow def: getRevisedDerivedTarget : VBPMN!FlowNode =
+	if self.getBaseDerivedTarget.oclIsUndefined() then
+		OclUndefined
+	else
+		self.getBaseDerivedTarget.getRevisedTarget
+	endif;
+
+-- True when another equivalent derived flow should be preferred (deterministic by lower id)
+helper context VBPMN!SequenceFlow def: hasPreferredEquivalentFlow : Boolean =
+	not self.getRevisedDerivedTarget.oclIsUndefined() and
+	VBPMN!SequenceFlow.allInstancesFrom('IN')->exists(other |
+		other <> self and
+		other.isDerivableFlow and
+		not other.sourceRef.isSinglePathGateway and
+		not other.getRevisedDerivedTarget.oclIsUndefined() and
+		other.sourceRef = self.sourceRef and
+		other.getRevisedDerivedTarget = self.getRevisedDerivedTarget and
+		other.id < self.id
+	);
+
+-- Keep only one sequence flow for each final source-target pair
 helper context VBPMN!SequenceFlow def: isPrimaryDerivedFlow : Boolean =
 	self.isDerivableFlow and
 	not self.sourceRef.isSinglePathGateway and
 	not self.getRevisedDerivedTarget.oclIsUndefined() and
-	not self.hasPreferredBaseEquivalentFlow;
+	not self.hasPreferredEquivalentFlow;
 
 helper context VBPMN!FlowNode def: isGatewayNode : Boolean =
 	self.oclIsKindOf(VBPMN!ExclusiveGateway) or
@@ -169,6 +147,40 @@ helper context VBPMN!FlowNode def: isSinglePathGateway : Boolean =
 	not self.isInExcludedContainer and
 	self.getIncomingEffectiveFlowCount = 1 and
 	self.getOutgoingEffectiveFlowCount = 1;
+
+-- Resolve single outgoing effective target (explicit flow or connector-generated flow)
+helper context VBPMN!FlowNode def: getSingleOutgoingEffectiveTarget : VBPMN!FlowNode =
+	if self.shouldGenerateConnectorFlow then
+		self.getConnectorTargetNode
+	else
+		let gatewayOut : VBPMN!SequenceFlow = VBPMN!SequenceFlow.allInstancesFrom('IN')->select(sf |
+			sf.isDerivableFlow and
+			not sf.getBaseDerivedTarget.oclIsUndefined() and
+			sf.sourceRef = self
+		)->first() in
+		if gatewayOut.oclIsUndefined() then
+			OclUndefined
+		else
+			gatewayOut.getBaseDerivedTarget
+		endif
+	endif;
+
+-- Post-derivation revision: bypass single-path gateways recursively
+helper context VBPMN!FlowNode def: getRevisedTarget : VBPMN!FlowNode =
+	if self.oclIsUndefined() then
+		OclUndefined
+	else
+		if self.isSinglePathGateway then
+			let nextTarget : VBPMN!FlowNode = self.getSingleOutgoingEffectiveTarget in
+			if nextTarget.oclIsUndefined() then
+				self
+			else
+				nextTarget.getRevisedTarget
+			endif
+		else
+			self
+		endif
+	endif;
 
 -- Helper to check if element has receiver extension
 helper context VBPMN!FlowNode def: hasReceiver : Boolean =
@@ -358,10 +370,16 @@ rule ReconnectSequenceFlow {
 		t : BPMN!SequenceFlow (
 			id <- s.id,
 			name <- s.name,
+			
 			sourceRef <- s.sourceRef,
+			
+			-- Apply post-derivation gateway revision on top of base target resolution
 			targetRef <- s.getRevisedDerivedTarget
 		)	
 }
+
+
+-- Keep other element
 
 rule StartEvent {
 	from s : VBPMN!StartEvent (
